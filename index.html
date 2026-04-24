@@ -91,7 +91,7 @@
     <div class="logo"><span>🔬</span></div>
     <div>
       <h1>BulkCable Inspector</h1>
-      <p>TE Connectivity — Calidad & Confiabilidad</p>
+      <p>Inspección de Calidad — Bulkcable</p>
     </div>
   </div>
   <div class="api-setup" id="apiSetup">
@@ -228,7 +228,7 @@ async function analyze() {
   if (!realWidth || !state.imageData || !state.layer || !state.apiKey) return;
   const layer = state.layer;
   hide('scaleCard'); hide('uploadCard'); show('loadingCard');
-  const prompt = `Eres un sistema experto de inspección de calidad para cables de alta velocidad en TE Connectivity Hermosillo.\n\nSe te proporciona una imagen de una muestra de capa de cable ya pintada con marcador rojo y extendida sobre una superficie plana. La capa se llama "${layer.name}" del número de parte ${state.part}.\n\nEl técnico midió manualmente que el ancho real de la tira es ${realWidth} mm. Usa esto como referencia de escala para todas tus mediciones.\n\nEspecificaciones requeridas para esta capa:\n- Ancho referencial: ${layer.ancho} mm\n- Traslapo mínimo requerido: ${layer.traslapo}%\n- Tipo de aplicación: ${layer.tipo}\n${layer.paso ? `- Paso requerido: ${layer.paso.val} ± ${layer.paso.tol} mm (rango: ${(layer.paso.val-layer.paso.tol).toFixed(2)} a ${(layer.paso.val+layer.paso.tol).toFixed(2)} mm)` : '- Sin paso (aplicación longitudinal)'}\n\nAnaliza la imagen visualmente y estima:\n1. El ancho real de la tira en mm\n2. El porcentaje de traslapo\n${layer.tipo==='espiral'?'3. El paso en mm':'3. No aplica paso'}\n\nResponde ÚNICAMENTE con este JSON exacto sin texto adicional ni backticks:\n{"ancho":0.00,"traslapo":0,"paso":${layer.tipo==='espiral'?'0.00':'null'},"confianza":"alta","observaciones":"texto max 80 chars"}`;
+  const prompt = `Eres un sistema experto de inspección de calidad para cables de alta velocidad en el área de Bulkcable.\n\nSe te proporciona una imagen de una muestra de capa de cable ya pintada con marcador rojo y extendida sobre una superficie plana. La capa se llama "${layer.name}" del número de parte ${state.part}.\n\nEl técnico midió manualmente que el ancho real de la tira es ${realWidth} mm. Usa esto como referencia de escala para todas tus mediciones.\n\nEspecificaciones requeridas para esta capa:\n- Ancho referencial: ${layer.ancho} mm\n- Traslapo mínimo requerido: ${layer.traslapo}%\n- Tipo de aplicación: ${layer.tipo}\n${layer.paso ? `- Paso requerido: ${layer.paso.val} ± ${layer.paso.tol} mm (rango: ${(layer.paso.val-layer.paso.tol).toFixed(2)} a ${(layer.paso.val+layer.paso.tol).toFixed(2)} mm)` : '- Sin paso (aplicación longitudinal)'}\n\nAnaliza la imagen visualmente y estima:\n1. El ancho real de la tira en mm\n2. El porcentaje de traslapo\n${layer.tipo==='espiral'?'3. El paso en mm':'3. No aplica paso'}\n\nResponde ÚNICAMENTE con este JSON exacto sin texto adicional ni backticks:\n{"ancho":0.00,"traslapo":0,"paso":${layer.tipo==='espiral'?'0.00':'null'},"confianza":"alta","observaciones":"texto max 80 chars"}`;
   try {
     const base64 = state.imageData.split(',')[1];
     const mimeMatch = state.imageData.match(/data:(image\/\w+);/);
