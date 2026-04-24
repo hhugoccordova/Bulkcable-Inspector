@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BulkCable Inspector — TE Connectivity</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; padding: 12px; }
+  .app { max-width: 420px; margin: 0 auto; }
+  .header { background: #1a1a2e; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .header h1 { color: #fff; font-size: 15px; font-weight: 600; }
+  .header p { color: rgba(255,255,255,0.55); font-size: 11px; margin-top: 2px; }
+  .logo { width: 38px; height: 38px; background: #e63946; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo span { color: white; font-size: 18px; }
+  .card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+  .card-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+  .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-option { padding: 12px 8px; border: 1.5px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; font-size: 13px; color: #333; text-align: center; transition: all 0.15s; }
+  .btn-option:hover { border-color: #1a1a2e; background: #f5f5ff; }
+  .btn-option.selected { border: 2px solid #1a1a2e; background: #1a1a2e; color: white; }
+  .btn-option .sub { font-size: 10px; opacity: 0.65; display: block; margin-top: 2px; }
+  .layer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .layer-btn { padding: 10px 8px; border: 1.5px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .layer-btn:hover { border-color: #1a1a2e; }
+  .layer-btn.selected { border: 2px solid #1a1a2e; background: #f0f4ff; }
+  .layer-dot { width: 12px; height: 12px; border-radius: 50%; margin: 0 auto 6px; border: 1px solid rgba(0,0,0,0.12); }
+  .layer-name { font-size: 11px; font-weight: 600; color: #222; }
+  .layer-sub { font-size: 10px; color: #888; margin-top: 2px; }
+  .upload-zone { border: 2px dashed #ccc; border-radius: 12px; padding: 28px 12px; text-align: center; cursor: pointer; background: #fafafa; position: relative; transition: border-color 0.15s; }
+  .upload-zone:hover { border-color: #1a1a2e; }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 32px; margin-bottom: 8px; }
+  .upload-text strong { display: block; font-size: 14px; color: #222; margin-bottom: 4px; }
+  .upload-text span { font-size: 12px; color: #888; }
+  .preview-img { width: 100%; border-radius: 10px; max-height: 220px; object-fit: contain; background: #111; margin-top: 10px; display: none; }
+  .scale-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .scale-row label { font-size: 13px; color: #555; white-space: nowrap; }
+  .scale-row input { flex: 1; padding: 9px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+  .scale-row input:focus { border-color: #1a1a2e; }
+  .scale-hint { font-size: 11px; color: #aaa; margin-bottom: 12px; }
+  .analyze-btn { width: 100%; padding: 14px; background: #1a1a2e; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .analyze-btn:hover { opacity: 0.88; }
+  .analyze-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .hidden { display: none !important; }
+  .loading { text-align: center; padding: 30px 20px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #eee; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { font-size: 13px; color: #666; }
+  .loading small { font-size: 11px; color: #aaa; margin-top: 4px; display: block; }
+  .verdict { border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .verdict.pass { background: #eaf7ee; }
+  .verdict.fail { background: #fdecea; }
+  .verdict-icon { font-size: 26px; }
+  .verdict strong { font-size: 15px; font-weight: 700; display: block; }
+  .verdict span { font-size: 12px; }
+  .verdict.pass strong { color: #2a7a3b; }
+  .verdict.fail strong { color: #c0392b; }
+  .verdict.pass span { color: #4caf50; }
+  .verdict.fail span { color: #e57373; }
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metric-card { background: #f7f7f7; border-radius: 10px; padding: 12px; text-align: center; }
+  .metric-card.pass { background: #eaf7ee; }
+  .metric-card.fail { background: #fdecea; }
+  .metric-value { font-size: 24px; font-weight: 700; }
+  .metric-card.pass .metric-value { color: #2a7a3b; }
+  .metric-card.fail .metric-value { color: #c0392b; }
+  .metric-label { font-size: 11px; color: #888; margin-top: 3px; }
+  .metric-spec { font-size: 10px; color: #bbb; margin-top: 2px; }
+  .metric-full { grid-column: 1 / -1; }
+  .info-row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { color: #888; }
+  .info-val { color: #222; font-weight: 500; }
+  .btn-secondary { width: 100%; padding: 12px; background: transparent; border: 1.5px solid #ddd; border-radius: 10px; font-size: 13px; color: #666; cursor: pointer; margin-top: 8px; transition: background 0.15s; }
+  .btn-secondary:hover { background: #f5f5f5; }
+  .api-setup { background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .api-setup p { font-size: 13px; color: #555; margin-bottom: 8px; }
+  .api-setup input { width: 100%; padding: 9px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; outline: none; font-family: monospace; }
+  .api-setup input:focus { border-color: #1a1a2e; }
+  .api-label { font-size: 11px; font-weight: 600; color: #f39c12; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .confianza-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .confianza-alta { background: #eaf7ee; color: #2a7a3b; }
+  .confianza-media { background: #fff8e1; color: #e67e22; }
+  .confianza-baja { background: #fdecea; color: #c0392b; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo"><span>🔬</span></div>
+    <div>
+      <h1>BulkCable Inspector</h1>
+      <p>TE Connectivity — Calidad & Confiabilidad</p>
+    </div>
+  </div>
+  <div class="api-setup" id="apiSetup">
+    <div class="api-label">⚙️ Configuración inicial</div>
+    <p>Ingresa tu API Key de Anthropic para activar el análisis con IA:</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+    <button class="analyze-btn" style="margin-top:8px;" onclick="saveApiKey()">Guardar y continuar</button>
+  </div>
+  <div id="mainApp" class="hidden">
+    <div class="card" id="partCard">
+      <div class="card-title">1. Número de parte</div>
+      <div class="btn-group">
+        <button class="btn-option" onclick="selectPart('34', this)">Parte 34<span class="sub">3 capas</span></button>
+        <button class="btn-option" onclick="selectPart('38', this)">Parte 38<span class="sub">4 capas</span></button>
+      </div>
+    </div>
+    <div class="card hidden" id="layerCard">
+      <div class="card-title">2. Selecciona la capa</div>
+      <div class="layer-grid" id="layerGrid"></div>
+    </div>
+    <div class="card hidden" id="uploadCard">
+      <div class="card-title">3. Foto de la muestra</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="handleFile(this)">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">
+          <strong>Tomar foto o seleccionar imagen</strong>
+          <span>Extiende la muestra plana con buena iluminación</span>
+        </div>
+      </div>
+      <img id="previewImg" class="preview-img">
+    </div>
+    <div class="card hidden" id="scaleCard">
+      <div class="card-title">4. Referencia de escala</div>
+      <div class="scale-row">
+        <label>Ancho real medido:</label>
+        <input type="number" id="realWidth" placeholder="ej. 5.0" step="0.1" min="0.5" max="20" oninput="checkBtn()">
+        <span style="font-size:13px;color:#888;">mm</span>
+      </div>
+      <div class="scale-hint">Ancho referencial de esta capa: <strong id="refHint">—</strong></div>
+      <button class="analyze-btn" id="analyzeBtn" onclick="analyze()" disabled>Analizar muestra con IA</button>
+    </div>
+    <div class="card hidden" id="loadingCard">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Analizando imagen con IA...</p>
+        <small>Detectando bordes, midiendo capas y comparando especificaciones</small>
+      </div>
+    </div>
+    <div id="resultsSection" class="hidden">
+      <div id="verdictBox"></div>
+      <div class="card">
+        <div class="card-title">Mediciones</div>
+        <div class="metric-grid" id="metricsGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Detalle de la muestra</div>
+        <div id="sampleInfo"></div>
+      </div>
+      <div class="card">
+        <button class="analyze-btn" onclick="resetApp()">Nueva inspección</button>
+        <button class="btn-secondary" onclick="window.print()">Imprimir resultado</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const SPECS = {
+  '34': { layers: [
+    { id: 'mylar_natural', name: 'Mylar natural', sub: 'Exterior · espiral ↺', color: '#deded4', ancho: 4, paso: { val: 3.80, tol: 0.38 }, traslapo: 15, tipo: 'espiral' },
+    { id: 'mylar_azul_nat', name: 'Mylar azul natural', sub: 'Espiral ↻', color: '#4a90d9', ancho: 5, paso: { val: 3.80, tol: 0.38 }, traslapo: 25, tipo: 'espiral' },
+    { id: 'foil_34', name: 'Foil', sub: 'Longitudinal', color: '#b8bec7', ancho: 6, paso: null, traslapo: 25, tipo: 'longitudinal' }
+  ]},
+  '38': { layers: [
+    { id: 'mylar_azul_nat38', name: 'Mylar azul natural', sub: 'Exterior · espiral ↺', color: '#4a90d9', ancho: 4, paso: { val: 4.00, tol: 0.38 }, traslapo: 15, tipo: 'espiral' },
+    { id: 'mylar_azul_met', name: 'Mylar azul metálico', sub: 'Espiral ↻', color: '#1a5fa8', ancho: 4, paso: { val: 4.00, tol: 0.38 }, traslapo: 15, tipo: 'espiral' },
+    { id: 'foil_38', name: 'Foil', sub: 'Longitudinal', color: '#b8bec7', ancho: 6.5, paso: null, traslapo: 25, tipo: 'longitudinal' },
+    { id: 'tape_blanco', name: 'Tape blanco', sub: 'Espiral ↺', color: '#f0f0f0', ancho: 5, paso: { val: 3.90, tol: 0.38 }, traslapo: 40, tipo: 'espiral' }
+  ]}
+};
+let state = { part: null, layer: null, imageData: null, apiKey: null };
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-ant')) { alert('La API Key no parece válida. Debe comenzar con sk-ant-'); return; }
+  state.apiKey = key;
+  localStorage.setItem('bc_apikey', key);
+  document.getElementById('apiSetup').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+}
+window.onload = () => {
+  const saved = localStorage.getItem('bc_apikey');
+  if (saved) { state.apiKey = saved; document.getElementById('apiSetup').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); }
+};
+function selectPart(p, btn) {
+  state.part = p; state.layer = null; state.imageData = null;
+  document.querySelectorAll('.btn-option').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  renderLayers(); show('layerCard');
+  hide('uploadCard'); hide('scaleCard'); hide('loadingCard'); hide('resultsSection');
+}
+function renderLayers() {
+  const grid = document.getElementById('layerGrid'); grid.innerHTML = '';
+  SPECS[state.part].layers.forEach(l => {
+    const btn = document.createElement('button'); btn.className = 'layer-btn';
+    btn.innerHTML = `<div class="layer-dot" style="background:${l.color}"></div><div class="layer-name">${l.name}</div><div class="layer-sub">${l.sub}</div>`;
+    btn.onclick = () => { selectLayer(l); document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); };
+    grid.appendChild(btn);
+  });
+}
+function selectLayer(layer) {
+  state.layer = layer;
+  document.getElementById('refHint').textContent = layer.ancho + ' mm (referencial)';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('realWidth').value = '';
+  document.getElementById('analyzeBtn').disabled = true;
+  show('uploadCard'); hide('scaleCard'); hide('loadingCard'); hide('resultsSection');
+}
+function handleFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.imageData = e.target.result;
+    const img = document.getElementById('previewImg'); img.src = e.target.result; img.style.display = 'block';
+    show('scaleCard'); checkBtn();
+  };
+  reader.readAsDataURL(file);
+}
+function checkBtn() {
+  const rw = document.getElementById('realWidth').value;
+  document.getElementById('analyzeBtn').disabled = !(state.imageData && rw && parseFloat(rw) > 0);
+}
+async function analyze() {
+  const realWidth = parseFloat(document.getElementById('realWidth').value);
+  if (!realWidth || !state.imageData || !state.layer || !state.apiKey) return;
+  const layer = state.layer;
+  hide('scaleCard'); hide('uploadCard'); show('loadingCard');
+  const prompt = `Eres un sistema experto de inspección de calidad para cables de alta velocidad en TE Connectivity Hermosillo.\n\nSe te proporciona una imagen de una muestra de capa de cable ya pintada con marcador rojo y extendida sobre una superficie plana. La capa se llama "${layer.name}" del número de parte ${state.part}.\n\nEl técnico midió manualmente que el ancho real de la tira es ${realWidth} mm. Usa esto como referencia de escala para todas tus mediciones.\n\nEspecificaciones requeridas para esta capa:\n- Ancho referencial: ${layer.ancho} mm\n- Traslapo mínimo requerido: ${layer.traslapo}%\n- Tipo de aplicación: ${layer.tipo}\n${layer.paso ? `- Paso requerido: ${layer.paso.val} ± ${layer.paso.tol} mm (rango: ${(layer.paso.val-layer.paso.tol).toFixed(2)} a ${(layer.paso.val+layer.paso.tol).toFixed(2)} mm)` : '- Sin paso (aplicación longitudinal)'}\n\nAnaliza la imagen visualmente y estima:\n1. El ancho real de la tira en mm\n2. El porcentaje de traslapo\n${layer.tipo==='espiral'?'3. El paso en mm':'3. No aplica paso'}\n\nResponde ÚNICAMENTE con este JSON exacto sin texto adicional ni backticks:\n{"ancho":0.00,"traslapo":0,"paso":${layer.tipo==='espiral'?'0.00':'null'},"confianza":"alta","observaciones":"texto max 80 chars"}`;
+  try {
+    const base64 = state.imageData.split(',')[1];
+    const mimeMatch = state.imageData.match(/data:(image\/\w+);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': state.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 500, messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: mime, data: base64 } },
+        { type: 'text', text: prompt }
+      ]}]})
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = data.content.map(i => i.text||'').join('').replace(/```json|```/g,'').trim();
+    showResults(JSON.parse(text), realWidth);
+  } catch(e) {
+    hide('loadingCard'); show('scaleCard');
+    alert('Error al analizar: ' + e.message);
+  }
+}
+function showResults(r, realWidth) {
+  hide('loadingCard');
+  const layer = state.layer;
+  const anchoPass = Math.abs(r.ancho - layer.ancho) <= layer.ancho * 0.15;
+  const traslapoPass = r.traslapo >= layer.traslapo;
+  const pasoPass = layer.paso ? (r.paso >= layer.paso.val-layer.paso.tol && r.paso <= layer.paso.val+layer.paso.tol) : true;
+  const allPass = anchoPass && traslapoPass && pasoPass;
+  document.getElementById('verdictBox').innerHTML = `<div class="verdict ${allPass?'pass':'fail'}"><div class="verdict-icon">${allPass?'✅':'❌'}</div><div><strong>${allPass?'MUESTRA APROBADA':'MUESTRA RECHAZADA'}</strong><span>${allPass?'Todos los parámetros dentro de especificación':'Uno o más parámetros fuera de especificación'}</span></div></div>`;
+  const cc = r.confianza==='alta'?'confianza-alta':r.confianza==='media'?'confianza-media':'confianza-baja';
+  document.getElementById('metricsGrid').innerHTML = `
+    <div class="metric-card ${anchoPass?'pass':'fail'}"><div class="metric-value">${r.ancho.toFixed(2)}</div><div class="metric-label">Ancho (mm)</div><div class="metric-spec">Ref: ${layer.ancho} mm</div></div>
+    <div class="metric-card ${traslapoPass?'pass':'fail'}"><div class="metric-value">${r.traslapo}%</div><div class="metric-label">Traslapo</div><div class="metric-spec">Mín: ${layer.traslapo}%</div></div>
+    ${layer.tipo==='espiral'&&layer.paso?`<div class="metric-card metric-full ${pasoPass?'pass':'fail'}"><div class="metric-value">${r.paso?r.paso.toFixed(2):'—'}</div><div class="metric-label">Paso (mm)</div><div class="metric-spec">${layer.paso.val} ± ${layer.paso.tol} mm</div></div>`:''}`;
+  const now = new Date();
+  document.getElementById('sampleInfo').innerHTML = `
+    <div class="info-row"><span class="info-key">Número de parte</span><span class="info-val">${state.part}</span></div>
+    <div class="info-row"><span class="info-key">Capa</span><span class="info-val">${layer.name}</span></div>
+    <div class="info-row"><span class="info-key">Tipo</span><span class="info-val">${layer.tipo}</span></div>
+    <div class="info-row"><span class="info-key">Ancho ingresado</span><span class="info-val">${realWidth} mm</span></div>
+    <div class="info-row"><span class="info-key">Confianza IA</span><span class="info-val"><span class="confianza-badge ${cc}">${r.confianza}</span></span></div>
+    <div class="info-row"><span class="info-key">Observaciones</span><span class="info-val">${r.observaciones}</span></div>
+    <div class="info-row"><span class="info-key">Fecha/Hora</span><span class="info-val">${now.toLocaleString('es-MX')}</span></div>`;
+  show('resultsSection');
+}
+function resetApp() {
+  state.layer=null; state.imageData=null;
+  document.querySelectorAll('.layer-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('fileInput').value='';
+  document.getElementById('previewImg').style.display='none';
+  document.getElementById('realWidth').value='';
+  hide('uploadCard'); hide('scaleCard'); hide('loadingCard'); hide('resultsSection');
+  window.scrollTo(0,0);
+}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+</script>
+</body>
+</html>
