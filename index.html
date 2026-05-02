@@ -181,7 +181,6 @@ canvas { width: 100%; display: block; }
       <div class="card">
         <button class="analyze-btn" onclick="resetApp()">Nueva inspección</button>
         <button class="btn-secondary" onclick="saveImage()">Guardar imagen con mediciones</button>
-        <button class="btn-secondary" onclick="window.print()">Imprimir resultado</button>
       </div>
     </div>
   </div>
@@ -359,48 +358,58 @@ function drawMeasurements(result, layer) {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0);
   const w = img.width, h = img.height;
-  const pct = (v, max) => v / 100 * max;
-  ctx.lineWidth = Math.max(3, w * 0.004);
-  ctx.font = `bold ${Math.max(20, w * 0.04)}px Arial`;
 
-  if (result.lineaA) {
-    const x = pct(result.lineaA.x, w);
-    const y1 = pct(result.lineaA.y1, h);
-    const y2 = pct(result.lineaA.y2, h);
-    ctx.strokeStyle = '#ff4444';
-    ctx.beginPath(); ctx.moveTo(x, y1); ctx.lineTo(x, y2); ctx.stroke();
-    drawArrow(ctx, x, y1, x, y2, '#ff4444', Math.max(10, w*0.015));
-    ctx.fillStyle = '#ff4444';
-    ctx.fillText(`A: ${result.A.toFixed(2)}mm`, x + 8, (y1+y2)/2);
-  }
+  const lw = Math.max(4, w * 0.005);
+  ctx.lineWidth = lw;
+  const fs = Math.max(24, w * 0.045);
+  ctx.font = `bold ${fs}px Arial`;
+
+  const stripTop = h * 0.22;
+  const stripBot = h * 0.78;
+  const stripMid = (stripTop + stripBot) / 2;
+  const aTop = stripTop;
+  const aBot = stripTop + (result.A / result.B) * (stripBot - stripTop);
+
+  const xB = w * 0.28;
+  const xA = w * 0.55;
+  const xC1 = w * 0.60;
+  const yC1 = stripTop + (stripBot - stripTop) * 0.08;
+  const xC2 = w * 0.85;
+  const yC2 = stripBot - (stripBot - stripTop) * 0.08;
+
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 6;
 
   if (result.lineaB) {
-    const x = pct(result.lineaB.x, w);
-    const y1 = pct(result.lineaB.y1, h);
-    const y2 = pct(result.lineaB.y2, h);
     ctx.strokeStyle = '#44aaff';
-    ctx.beginPath(); ctx.moveTo(x, y1); ctx.lineTo(x, y2); ctx.stroke();
-    drawArrow(ctx, x, y1, x, y2, '#44aaff', Math.max(10, w*0.015));
+    ctx.beginPath(); ctx.moveTo(xB, stripTop); ctx.lineTo(xB, stripBot); ctx.stroke();
+    drawArrow(ctx, xB, stripTop, xB, stripBot, '#44aaff', Math.max(14, w*0.018));
     ctx.fillStyle = '#44aaff';
-    ctx.fillText(`B: ${result.B.toFixed(2)}mm`, x + 8, (y1+y2)/2 + 30);
+    ctx.fillText(`B: ${result.B.toFixed(3)}mm`, xB + lw*2, stripMid - fs*0.3);
   }
 
-  if (result.lineaC && layer.tipo === 'espiral') {
-    const x1 = pct(result.lineaC.x1, w);
-    const y1 = pct(result.lineaC.y1, h);
-    const x2 = pct(result.lineaC.x2, w);
-    const y2 = pct(result.lineaC.y2, h);
-    ctx.strokeStyle = '#44ff88';
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-    drawArrow(ctx, x1, y1, x2, y2, '#44ff88', Math.max(10, w*0.015));
-    ctx.fillStyle = '#44ff88';
-    ctx.fillText(`C: ${result.C ? result.C.toFixed(2) : '—'}mm`, (x1+x2)/2 + 8, (y1+y2)/2);
+  if (result.lineaA) {
+    ctx.strokeStyle = '#ff4444';
+    ctx.beginPath(); ctx.moveTo(xA, aTop); ctx.lineTo(xA, aBot); ctx.stroke();
+    drawArrow(ctx, xA, aTop, xA, aBot, '#ff4444', Math.max(14, w*0.018));
+    ctx.fillStyle = '#ff4444';
+    ctx.fillText(`A: ${result.A.toFixed(3)}mm`, xA + lw*2, (aTop+aBot)/2);
   }
+
+  if (result.lineaC && layer.tipo === 'espiral' && result.C) {
+    ctx.strokeStyle = '#44ff88';
+    ctx.beginPath(); ctx.moveTo(xC1, yC1); ctx.lineTo(xC2, yC2); ctx.stroke();
+    drawArrow(ctx, xC1, yC1, xC2, yC2, '#44ff88', Math.max(14, w*0.018));
+    ctx.fillStyle = '#44ff88';
+    ctx.fillText(`C: ${result.C.toFixed(3)}mm`, (xC1+xC2)/2 - fs*2, (yC1+yC2)/2 - lw*3);
+  }
+
+  ctx.shadowBlur = 0;
 }
 
 function drawArrow(ctx, x1, y1, x2, y2, color, size) {
   const angle = Math.atan2(y2-y1, x2-x1);
-  ctx.strokeStyle = color; ctx.fillStyle = color;
+  ctx.strokeStyle = color;
   ctx.beginPath();
   ctx.moveTo(x1, y1);
   ctx.lineTo(x1 + size*Math.cos(angle + Math.PI/6), y1 + size*Math.sin(angle + Math.PI/6));
@@ -414,7 +423,7 @@ function drawArrow(ctx, x1, y1, x2, y2, color, size) {
   ctx.lineTo(x2 - size*Math.cos(angle - Math.PI/6), y2 - size*Math.sin(angle - Math.PI/6));
   ctx.stroke();
 }
-
+  
 function showResults(r, realWidth) {
   hide('loadingCard');
   const layer = state.layer;
